@@ -156,7 +156,7 @@ function shakeBall() {
         });
         
         updateHistory();
-        saveToStorage();
+        saveToLocalStorage();
         
         if (elements.animationSwitch.checked) {
             elements.ball.classList.remove('shake');
@@ -186,11 +186,11 @@ function resetBall() {
     stats = { total: 0, positive: 0, negative: 0 };
     updateHistory();
     updateStats();
-    saveToStorage();
+    saveToLocalStorage();
     elements.moodText.textContent = 'The oracle awaits...';
 }
 
-function saveToStorage() {
+function saveToLocalStorage() {
     const data = {
         history,
         stats,
@@ -202,38 +202,31 @@ function saveToStorage() {
             volume: elements.volumeSlider.value
         }
     };
-    try {
-        window.dataStorage = data;
-    } catch (e) {
-        console.log('Storage not available');
-    }
+    localStorage.setItem('magic8ballData', JSON.stringify(data));
 }
 
-function loadFromStorage() {
-    try {
-        const data = window.dataStorage;
-        if (data) {
-            history = data.history || [];
-            stats = data.stats || { total: 0, positive: 0, negative: 0 };
-            
-            if (data.settings) {
-                elements.themeSwitch.checked = data.settings.theme;
-                elements.animationSwitch.checked = data.settings.animation;
-                elements.soundSwitch.checked = data.settings.sound;
-                elements.autoModeSwitch.checked = data.settings.autoMode;
-                elements.volumeSlider.value = data.settings.volume;
-            }
-            
-            updateTheme();
-            updateHistory();
-            updateStats();
-            
-            if (elements.autoModeSwitch.checked) {
-                startAutoMode();
-            }
+function loadFromLocalStorage() {
+    const savedData = localStorage.getItem('magic8ballData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        history = data.history || [];
+        stats = data.stats || { total: 0, positive: 0, negative: 0 };
+        
+        if (data.settings) {
+            elements.themeSwitch.checked = data.settings.theme;
+            elements.animationSwitch.checked = data.settings.animation;
+            elements.soundSwitch.checked = data.settings.sound;
+            elements.autoModeSwitch.checked = data.settings.autoMode;
+            elements.volumeSlider.value = data.settings.volume;
         }
-    } catch (e) {
-        console.log('Storage not available');
+        
+        updateTheme();
+        updateHistory();
+        updateStats();
+        
+        if (elements.autoModeSwitch.checked) {
+            startAutoMode();
+        }
     }
 }
 
@@ -274,7 +267,7 @@ elements.resetButton.addEventListener('click', resetBall);
 
 elements.themeSwitch.addEventListener('change', () => {
     updateTheme();
-    saveToStorage();
+    saveToLocalStorage();
 });
 
 elements.autoModeSwitch.addEventListener('change', (e) => {
@@ -283,7 +276,7 @@ elements.autoModeSwitch.addEventListener('change', (e) => {
     } else {
         stopAutoMode();
     }
-    saveToStorage();
+    saveToLocalStorage();
 });
 
 elements.question.addEventListener('keypress', (e) => {
@@ -298,12 +291,12 @@ elements.ball.addEventListener('click', () => {
     }
 });
 
-elements.volumeSlider.addEventListener('input', saveToStorage);
-elements.animationSwitch.addEventListener('change', saveToStorage);
-elements.soundSwitch.addEventListener('change', saveToStorage);
+elements.volumeSlider.addEventListener('input', saveToLocalStorage);
+elements.animationSwitch.addEventListener('change', saveToLocalStorage);
+elements.soundSwitch.addEventListener('change', saveToLocalStorage);
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromStorage();
+    loadFromLocalStorage();
     
     setInterval(() => {
         const particles = document.querySelectorAll('.particle');
@@ -313,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
-window.addEventListener('beforeunload', saveToStorage);
+window.addEventListener('beforeunload', saveToLocalStorage);
 
 function initializeParticleSystem() {
     const particlesContainer = document.querySelector('.floating-particles');
@@ -360,28 +353,20 @@ function enableAccessibilityFeatures() {
 
 enableAccessibilityFeatures();
 
-let audioContext;
-
-function initAudioContext() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    return audioContext;
-}
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 function createOscillator(frequency, duration) {
-    const ctx = initAudioContext();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
     
     oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    gainNode.connect(audioContext.destination);
     
     oscillator.type = 'sine';
     oscillator.frequency.value = frequency;
     
-    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     return { oscillator, gainNode };
 }
@@ -389,120 +374,14 @@ function createOscillator(frequency, duration) {
 function playMysticalSound() {
     if (!elements.soundSwitch.checked) return;
     
-    try {
-        const frequencies = [440, 554.37, 659.25];
-        frequencies.forEach((freq, index) => {
-            setTimeout(() => {
-                const { oscillator } = createOscillator(freq, 0.5);
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.5);
-            }, index * 200);
-        });
-    } catch (e) {
-        console.log('Audio not supported');
-    }
+    const frequencies = [440, 554.37, 659.25];
+    frequencies.forEach((freq, index) => {
+        setTimeout(() => {
+            const { oscillator, gainNode } = createOscillator(freq, 0.5);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }, index * 200);
+    });
 }
 
 elements.ball.addEventListener('mouseover', playMysticalSound);
-
-function addAdvancedInteractions() {
-    let clickCount = 0;
-    const multiClickThreshold = 3;
-    let clickTimer;
-    
-    elements.ball.addEventListener('click', () => {
-        clickCount++;
-        
-        if (clickTimer) clearTimeout(clickTimer);
-        
-        clickTimer = setTimeout(() => {
-            if (clickCount >= multiClickThreshold) {
-                elements.question.value = generateRandomQuestion();
-                shakeBall();
-            }
-            clickCount = 0;
-        }, 500);
-    });
-    
-    let touchStartY = 0;
-    let touchEndY = 0;
-    
-    elements.ball.addEventListener('touchstart', (e) => {
-        touchStartY = e.changedTouches[0].screenY;
-    });
-    
-    elements.ball.addEventListener('touchend', (e) => {
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipe();
-    });
-    
-    function handleSwipe() {
-        const swipeDistance = touchStartY - touchEndY;
-        if (Math.abs(swipeDistance) > 50) {
-            if (elements.question.value.trim()) {
-                shakeBall();
-            } else {
-                elements.question.value = generateRandomQuestion();
-            }
-        }
-    }
-}
-
-addAdvancedInteractions();
-
-function addKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key.toLowerCase()) {
-                case 'enter':
-                    e.preventDefault();
-                    if (elements.question.value.trim()) {
-                        shakeBall();
-                    }
-                    break;
-                case 'r':
-                    e.preventDefault();
-                    resetBall();
-                    break;
-                case 'q':
-                    e.preventDefault();
-                    elements.question.value = generateRandomQuestion();
-                    elements.question.focus();
-                    break;
-                case 't':
-                    e.preventDefault();
-                    elements.themeSwitch.checked = !elements.themeSwitch.checked;
-                    updateTheme();
-                    saveToStorage();
-                    break;
-            }
-        }
-        
-        if (e.key === 'Escape') {
-            elements.question.blur();
-        }
-    });
-}
-
-addKeyboardShortcuts();
-
-function predictiveTextAnalysis() {
-    const positiveKeywords = ['good', 'yes', 'success', 'love', 'happy', 'win', 'lucky', 'fortune'];
-    const negativeKeywords = ['bad', 'no', 'fail', 'sad', 'lose', 'unlucky', 'trouble', 'problem'];
-    
-    elements.question.addEventListener('input', () => {
-        const text = elements.question.value.toLowerCase();
-        const hasPositive = positiveKeywords.some(word => text.includes(word));
-        const hasNegative = negativeKeywords.some(word => text.includes(word));
-        
-        if (hasPositive && !hasNegative) {
-            elements.question.style.borderColor = '#4CAF50';
-        } else if (hasNegative && !hasPositive) {
-            elements.question.style.borderColor = '#f44336';
-        } else {
-            elements.question.style.borderColor = '#7b68ee';
-        }
-    });
-}
-
-predictiveTextAnalysis();
