@@ -27,6 +27,18 @@ const moodPhrases = {
     negative: ["The oracle senses uncertainty", "The astral planes are turbulent", "The mystic forces are cautious"]
 };
 
+let stats = {
+    total: 0,
+    positive: 0,
+    negative: 0
+};
+
+const soundEffects = {
+    shake: new Audio('data:audio/wav;base64,UklGRl9vT...'),
+    positive: new Audio('data:audio/wav;base64,UklGRh8wX...'),
+    negative: new Audio('data:audio/wav;base64,UklGRk9yY...')
+};
+
 class Particle {
     constructor(x, y) {
         this.element = document.createElement('div');
@@ -52,11 +64,33 @@ const elements = {
     question: document.getElementById('question'),
     shakeButton: document.getElementById('shake-button'),
     resetButton: document.getElementById('reset-button'),
-    moodText: document.getElementById('mood-text')
+    historyList: document.getElementById('history-list'),
+    moodText: document.getElementById('mood-text'),
+    totalPredictions: document.getElementById('total-predictions'),
+    positivePredictions: document.getElementById('positive-predictions'),
+    negativePredictions: document.getElementById('negative-predictions'),
+    themeSwitch: document.getElementById('theme-switch'),
+    animationSwitch: document.getElementById('animation-switch'),
+    soundSwitch: document.getElementById('sound-switch'),
+    autoModeSwitch: document.getElementById('auto-mode-switch'),
+    volumeSlider: document.getElementById('volume-slider')
 };
+
+let history = [];
+let autoModeInterval;
 
 function getRandomAnswer() {
     return answers[Math.floor(Math.random() * answers.length)];
+}
+
+function updateStats(type) {
+    stats.total++;
+    if (type === 'positive') stats.positive++;
+    if (type === 'negative') stats.negative++;
+    
+    elements.totalPredictions.textContent = stats.total;
+    elements.positivePredictions.textContent = stats.positive;
+    elements.negativePredictions.textContent = stats.negative;
 }
 
 function updateMood(type) {
@@ -73,6 +107,17 @@ function createParticles() {
             ballRect.left + Math.random() * ballRect.width,
             ballRect.top + Math.random() * ballRect.height
         );
+    }
+}
+
+function playSound(type) {
+    if (!elements.soundSwitch.checked) return;
+    
+    const sound = soundEffects[type];
+    if (sound) {
+        sound.volume = elements.volumeSlider.value / 100;
+        sound.currentTime = 0;
+        sound.play();
     }
 }
 
