@@ -229,6 +229,41 @@ body {
     color: #7b68ee;
 }
 
+.features-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 50px;
+}
+
+.settings-container, .history-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(123, 104, 238, 0.2);
+}
+
+.settings-container h3, .history-container h3 {
+    color: #a0a0ff;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 input[type="text"] {
     width: 100%;
     padding: 15px 45px;

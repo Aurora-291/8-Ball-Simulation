@@ -55,6 +55,55 @@
             </div>
         </div>
 
+        <div class="features-panel">
+            <div class="settings-container">
+                <h3><i class="fas fa-cog"></i> Mystical Settings</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Dark Prophecy Mode</label>
+                        <input type="checkbox" id="theme-switch" class="toggle">
+                    </div>
+                    <div class="setting-item">
+                        <label>Crystal Ball Effects</label>
+                        <input type="checkbox" id="animation-switch" class="toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Mystical Sounds</label>
+                        <input type="checkbox" id="sound-switch" class="toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Auto-Prediction</label>
+                        <input type="checkbox" id="auto-mode-switch" class="toggle">
+                    </div>
+                </div>
+                <div class="volume-control">
+                    <label>Oracle's Voice</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="history-container">
+                <h3><i class="fas fa-scroll"></i> Prophecy Archive</h3>
+                <div class="history-wrapper">
+                    <ul id="history-list"></ul>
+                </div>
+                <div class="statistics">
+                    <div class="stat-item">
+                        <span>Total Prophecies:</span>
+                        <span id="total-predictions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Positive Omens:</span>
+                        <span id="positive-predictions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Negative Omens:</span>
+                        <span id="negative-predictions">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="floating-particles"></div>
     </div>
     <script src="script.js"></script>
