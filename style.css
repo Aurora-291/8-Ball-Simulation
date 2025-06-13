@@ -180,3 +180,15 @@ input[type="text"]:focus {
 .glow-button.secondary {
     background: linear-gradient(135deg, #4a4a8f, #2a2a5f);
 }
+
+#answer {
+    color: white;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 20px;
+    max-width: 100px;
+    word-wrap: break-word;
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
