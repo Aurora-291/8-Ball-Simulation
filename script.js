@@ -28,6 +28,7 @@ const moodPhrases = {
 };
 
 const elements = {
+    ball: document.querySelector('.ball'),
     answer: document.getElementById('answer'),
     question: document.getElementById('question'),
     shakeButton: document.getElementById('shake-button'),
