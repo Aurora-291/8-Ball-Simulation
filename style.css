@@ -428,6 +428,23 @@ input[type="text"]:focus {
     pointer-events: none;
 }
 
+.dark-mode {
+    background: linear-gradient(135deg, #000510, #001529, #000510);
+}
+
+.dark-mode .settings-container,
+.dark-mode .history-container {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode input[type="text"] {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode #history-list li {
+    background: rgba(0, 0, 0, 0.3);
+}
+
 @keyframes move-twinkle {
     from { transform: translateY(0); }
     to { transform: translateY(-1000px); }
@@ -519,21 +536,4 @@ input[type="text"]:focus {
         width: 250px;
         height: 250px;
     }
-}
-
-.dark-mode {
-    background: linear-gradient(135deg, #000510, #001529, #000510);
-}
-
-.dark-mode .settings-container,
-.dark-mode .history-container {
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.dark-mode input[type="text"] {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.dark-mode #history-list li {
-    background: rgba(0, 0, 0, 0.3);
 }

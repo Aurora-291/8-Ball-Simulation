@@ -128,7 +128,11 @@ function shakeBall() {
         return;
     }
 
-    elements.ball.classList.add('shake');
+    if (elements.animationSwitch.checked) {
+        elements.ball.classList.add('shake');
+        playSound('shake');
+    }
+
     elements.answer.style.opacity = '0';
     
     setTimeout(() => {
@@ -137,17 +141,179 @@ function shakeBall() {
         elements.answer.style.opacity = '1';
         
         updateMood(prediction.type);
-        createParticles();
+        updateStats(prediction.type);
+        playSound(prediction.type);
         
-        elements.ball.classList.remove('shake');
+        if (elements.animationSwitch.checked) {
+            createParticles();
+        }
+        
+        history.unshift({
+            question: elements.question.value,
+            answer: prediction.text,
+            type: prediction.type,
+            timestamp: new Date().toLocaleString()
+        });
+        
+        updateHistory();
+        saveToStorage();
+        
+        if (elements.animationSwitch.checked) {
+            elements.ball.classList.remove('shake');
+        }
     }, 1000);
+}
+
+function updateHistory() {
+    elements.historyList.innerHTML = '';
+    history.slice(0, 10).forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <strong>${item.question}</strong><br>
+            <span style="color: ${item.type === 'positive' ? '#4CAF50' : item.type === 'negative' ? '#f44336' : '#ff9800'}">
+                ${item.answer}
+            </span><br>
+            <small>${item.timestamp}</small>
+        `;
+        elements.historyList.appendChild(li);
+    });
 }
 
 function resetBall() {
     elements.question.value = '';
     elements.answer.textContent = 'Ask your destiny...';
+    history = [];
+    stats = { total: 0, positive: 0, negative: 0 };
+    updateHistory();
+    updateStats();
+    saveToStorage();
     elements.moodText.textContent = 'The oracle awaits...';
 }
+
+function saveToStorage() {
+    const data = {
+        history,
+        stats,
+        settings: {
+            theme: elements.themeSwitch.checked,
+            animation: elements.animationSwitch.checked,
+            sound: elements.soundSwitch.checked,
+            autoMode: elements.autoModeSwitch.checked,
+            volume: elements.volumeSlider.value
+        }
+    };
+    try {
+        window.dataStorage = data;
+    } catch (e) {
+        console.log('Storage not available');
+    }
+}
+
+function loadFromStorage() {
+    try {
+        const data = window.dataStorage;
+        if (data) {
+            history = data.history || [];
+            stats = data.stats || { total: 0, positive: 0, negative: 0 };
+            
+            if (data.settings) {
+                elements.themeSwitch.checked = data.settings.theme;
+                elements.animationSwitch.checked = data.settings.animation;
+                elements.soundSwitch.checked = data.settings.sound;
+                elements.autoModeSwitch.checked = data.settings.autoMode;
+                elements.volumeSlider.value = data.settings.volume;
+            }
+            
+            updateTheme();
+            updateHistory();
+            updateStats();
+            
+            if (elements.autoModeSwitch.checked) {
+                startAutoMode();
+            }
+        }
+    } catch (e) {
+        console.log('Storage not available');
+    }
+}
+
+function updateTheme() {
+    document.body.classList.toggle('dark-mode', elements.themeSwitch.checked);
+}
+
+function startAutoMode() {
+    autoModeInterval = setInterval(() => {
+        if (elements.question.value.trim()) {
+            shakeBall();
+        }
+    }, 10000);
+}
+
+function stopAutoMode() {
+    clearInterval(autoModeInterval);
+}
+
+function generateRandomQuestion() {
+    const questions = [
+        "Will today bring good fortune?",
+        "Should I take a chance today?",
+        "Is this the right path?",
+        "Will my wishes come true?",
+        "Is success in my future?",
+        "Should I make that important decision?",
+        "Will luck be on my side?",
+        "Is this the right time?",
+        "Should I wait for a better moment?",
+        "Will my dreams become reality?"
+    ];
+    return questions[Math.floor(Math.random() * questions.length)];
+}
+
+elements.shakeButton.addEventListener('click', shakeBall);
+elements.resetButton.addEventListener('click', resetBall);
+
+elements.themeSwitch.addEventListener('change', () => {
+    updateTheme();
+    saveToStorage();
+});
+
+elements.autoModeSwitch.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        startAutoMode();
+    } else {
+        stopAutoMode();
+    }
+    saveToStorage();
+});
+
+elements.question.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        shakeBall();
+    }
+});
+
+elements.ball.addEventListener('click', () => {
+    if (elements.question.value.trim()) {
+        shakeBall();
+    }
+});
+
+elements.volumeSlider.addEventListener('input', saveToStorage);
+elements.animationSwitch.addEventListener('change', saveToStorage);
+elements.soundSwitch.addEventListener('change', saveToStorage);
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromStorage();
+    
+    setInterval(() => {
+        const particles = document.querySelectorAll('.particle');
+        if (particles.length > 50) {
+            particles[0].remove();
+        }
+    }, 1000);
+});
+
+window.addEventListener('beforeunload', saveToStorage);
 
 function initializeParticleSystem() {
     const particlesContainer = document.querySelector('.floating-particles');
@@ -163,28 +329,180 @@ function initializeParticleSystem() {
     }
 }
 
-elements.shakeButton.addEventListener('click', shakeBall);
-elements.resetButton.addEventListener('click', resetBall);
+initializeParticleSystem();
 
-elements.question.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        shakeBall();
-    }
+window.addEventListener('resize', () => {
+    const particles = document.querySelectorAll('.particle');
+    particles.forEach(particle => {
+        particle.style.left = Math.random() * window.innerWidth + 'px';
+        particle.style.top = Math.random() * window.innerHeight + 'px';
+    });
 });
 
-elements.ball.addEventListener('click', () => {
-    if (elements.question.value.trim()) {
-        shakeBall();
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeParticleSystem();
+function enableAccessibilityFeatures() {
+    elements.shakeButton.setAttribute('aria-label', 'Consult the Oracle');
+    elements.resetButton.setAttribute('aria-label', 'Clear all predictions');
+    elements.question.setAttribute('aria-label', 'Enter your question');
     
-    setInterval(() => {
-        const particles = document.querySelectorAll('.particle');
-        if (particles.length > 50) {
-            particles[0].remove();
+    elements.ball.setAttribute('role', 'button');
+    elements.ball.setAttribute('aria-label', 'Click to shake the magic 8 ball');
+    
+    const settingsInputs = document.querySelectorAll('.settings-container input');
+    settingsInputs.forEach(input => {
+        const label = input.previousElementSibling;
+        if (label) {
+            const id = `setting-${Math.random().toString(36).substr(2, 9)}`;
+            input.id = id;
+            label.setAttribute('for', id);
         }
-    }, 1000);
-});
+    });
+}
+
+enableAccessibilityFeatures();
+
+let audioContext;
+
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+}
+
+function createOscillator(frequency, duration) {
+    const ctx = initAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    
+    return { oscillator, gainNode };
+}
+
+function playMysticalSound() {
+    if (!elements.soundSwitch.checked) return;
+    
+    try {
+        const frequencies = [440, 554.37, 659.25];
+        frequencies.forEach((freq, index) => {
+            setTimeout(() => {
+                const { oscillator } = createOscillator(freq, 0.5);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }, index * 200);
+        });
+    } catch (e) {
+        console.log('Audio not supported');
+    }
+}
+
+elements.ball.addEventListener('mouseover', playMysticalSound);
+
+function addAdvancedInteractions() {
+    let clickCount = 0;
+    const multiClickThreshold = 3;
+    let clickTimer;
+    
+    elements.ball.addEventListener('click', () => {
+        clickCount++;
+        
+        if (clickTimer) clearTimeout(clickTimer);
+        
+        clickTimer = setTimeout(() => {
+            if (clickCount >= multiClickThreshold) {
+                elements.question.value = generateRandomQuestion();
+                shakeBall();
+            }
+            clickCount = 0;
+        }, 500);
+    });
+    
+    let touchStartY = 0;
+    let touchEndY = 0;
+    
+    elements.ball.addEventListener('touchstart', (e) => {
+        touchStartY = e.changedTouches[0].screenY;
+    });
+    
+    elements.ball.addEventListener('touchend', (e) => {
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        const swipeDistance = touchStartY - touchEndY;
+        if (Math.abs(swipeDistance) > 50) {
+            if (elements.question.value.trim()) {
+                shakeBall();
+            } else {
+                elements.question.value = generateRandomQuestion();
+            }
+        }
+    }
+}
+
+addAdvancedInteractions();
+
+function addKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key.toLowerCase()) {
+                case 'enter':
+                    e.preventDefault();
+                    if (elements.question.value.trim()) {
+                        shakeBall();
+                    }
+                    break;
+                case 'r':
+                    e.preventDefault();
+                    resetBall();
+                    break;
+                case 'q':
+                    e.preventDefault();
+                    elements.question.value = generateRandomQuestion();
+                    elements.question.focus();
+                    break;
+                case 't':
+                    e.preventDefault();
+                    elements.themeSwitch.checked = !elements.themeSwitch.checked;
+                    updateTheme();
+                    saveToStorage();
+                    break;
+            }
+        }
+        
+        if (e.key === 'Escape') {
+            elements.question.blur();
+        }
+    });
+}
+
+addKeyboardShortcuts();
+
+function predictiveTextAnalysis() {
+    const positiveKeywords = ['good', 'yes', 'success', 'love', 'happy', 'win', 'lucky', 'fortune'];
+    const negativeKeywords = ['bad', 'no', 'fail', 'sad', 'lose', 'unlucky', 'trouble', 'problem'];
+    
+    elements.question.addEventListener('input', () => {
+        const text = elements.question.value.toLowerCase();
+        const hasPositive = positiveKeywords.some(word => text.includes(word));
+        const hasNegative = negativeKeywords.some(word => text.includes(word));
+        
+        if (hasPositive && !hasNegative) {
+            elements.question.style.borderColor = '#4CAF50';
+        } else if (hasNegative && !hasPositive) {
+            elements.question.style.borderColor = '#f44336';
+        } else {
+            elements.question.style.borderColor = '#7b68ee';
+        }
+    });
+}
+
+predictiveTextAnalysis();
