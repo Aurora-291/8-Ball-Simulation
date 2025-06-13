@@ -112,7 +112,6 @@ input[type="text"] {
     font-size: 16px;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
-    margin-bottom: 20px;
 }
 
 input[type="text"]:focus {
@@ -135,4 +134,49 @@ input[type="text"]:focus {
 .glow-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 0 20px rgba(123, 104, 238, 0.5);
+}
+
+.mood-indicator {
+    font-size: 1.2em;
+    color: #a0a0ff;
+}
+
+.number-8 {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #4a4a8f;
+    font-size: 60px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.input-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b68ee;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.glow-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.glow-button.secondary {
+    background: linear-gradient(135deg, #4a4a8f, #2a2a5f);
 }
